@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
+import 'package:ghibli_movies/layers/helper/local_storage.dart';
+
 class StatisticsScreen extends StatefulWidget {
   const StatisticsScreen({super.key});
 
@@ -12,15 +14,17 @@ class _StatisticsScreenState extends State<StatisticsScreen>
     with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _animation;
+  final LocalStorage _localStorage = LocalStorage();
 
   // Sample data - replace with actual data from your provider/repository
   final int totalMovies = 22;
-  final int watchedMovies = 15;
-  final int unwatchedMovies = 7;
+  int watchedMovies = 0;
+  int unwatchedMovies = 0;
 
   @override
   void initState() {
     super.initState();
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -30,6 +34,14 @@ class _StatisticsScreenState extends State<StatisticsScreen>
       curve: Curves.easeInOutCubic,
     );
     _animationController.forward();
+
+    // Load watched and unwatched movies from local storage
+    _localStorage.getWatched().then((watched) {
+      setState(() {
+        watchedMovies = watched.length;
+        unwatchedMovies = totalMovies - watchedMovies;
+      });
+    });
   }
 
   @override
@@ -125,19 +137,22 @@ class _StatisticsScreenState extends State<StatisticsScreen>
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
+              border: Border.all(
+                color: Colors.grey.withValues(alpha: 0.2),
+                width: 1,
+              ),
             ),
             child: Column(
               children: [
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(icon, color: color, size: 24),
@@ -184,12 +199,15 @@ class _StatisticsScreenState extends State<StatisticsScreen>
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
             ],
-            border: Border.all(color: Colors.grey.withOpacity(0.2), width: 1),
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.2),
+              width: 1,
+            ),
           ),
           child: Row(
             children: [

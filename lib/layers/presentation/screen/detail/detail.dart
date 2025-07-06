@@ -5,6 +5,7 @@ import 'package:ghibli_movies/layers/data/source/film_impl.dart';
 import 'package:ghibli_movies/layers/data/source/network/api.dart';
 import 'package:ghibli_movies/layers/domain/entity/film/film.dart';
 import 'package:ghibli_movies/layers/domain/usecase/film_usecase.dart';
+import 'package:ghibli_movies/layers/helper/local_storage.dart';
 import 'package:provider/provider.dart';
 
 class DetailScreen extends StatefulWidget {
@@ -18,6 +19,8 @@ class _DetailScreenState extends State<DetailScreen> {
   Future<Film>? _filmFuture;
   bool _isWatched = false;
   bool _isFavorite = false;
+
+  final LocalStorage _localStorage = LocalStorage();
 
   @override
   void initState() {
@@ -39,6 +42,14 @@ class _DetailScreenState extends State<DetailScreen> {
         setState(() {
           _filmFuture = Future.error('Film ID is null');
         });
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final filmId = Provider.of<FilmState>(context, listen: false).filmId;
+      if (filmId != null) {
+        _isWatched = await _localStorage.isWatched(filmId);
+        _isFavorite = await _localStorage.isFavorite(filmId);
       }
     });
   }
@@ -87,7 +98,7 @@ class _DetailScreenState extends State<DetailScreen> {
                 const SizedBox(height: 16),
 
                 // Action buttons
-                _buildActionButtons(),
+                _buildActionButtons(film),
 
                 const SizedBox(height: 10),
 
@@ -135,7 +146,10 @@ class _DetailScreenState extends State<DetailScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.7),
+                ],
               ),
             ),
           ),
@@ -156,7 +170,7 @@ class _DetailScreenState extends State<DetailScreen> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 4),
               ),
@@ -259,16 +273,22 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildActionButtons() {
+  Widget _buildActionButtons(Film film) {
     return Row(
       children: [
         // Watched button
         Expanded(
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               setState(() {
                 _isWatched = !_isWatched;
               });
+
+              if (_isWatched) {
+                await _localStorage.markWatched(film.id);
+              } else {
+                await _localStorage.removeWatched(film.id);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: _isWatched ? Colors.green : Colors.blue,
@@ -304,6 +324,12 @@ class _DetailScreenState extends State<DetailScreen> {
               setState(() {
                 _isFavorite = !_isFavorite;
               });
+
+              if (_isFavorite) {
+                _localStorage.addFavorite(film.id);
+              } else {
+                _localStorage.removeFavorite(film.id);
+              }
             },
             style: OutlinedButton.styleFrom(
               foregroundColor: _isFavorite ? Colors.red : Colors.black,

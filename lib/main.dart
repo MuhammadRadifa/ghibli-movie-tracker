@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ghibli_movies/layers/data/constant/app_color.dart';
 import 'package:ghibli_movies/layers/data/provider/film_state.dart';
+import 'package:ghibli_movies/layers/helper/local_storage.dart';
 import 'package:ghibli_movies/layers/presentation/screen/detail/detail.dart';
 import 'package:ghibli_movies/layers/presentation/screen/favorite/favorite.dart';
 import 'package:ghibli_movies/layers/presentation/screen/home/home.dart';
@@ -105,13 +106,14 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+
     _pageBuilders = [
       () => HomeScreen(
         onItemTapped: (String filmId) {
           // Update the FilmState with the selected film ID
           Provider.of<FilmState>(context, listen: false).setFilmId(filmId);
           // Navigate to DetailScreen
-          _pageController.jumpToPage(2); // Assuming DetailScreen is at index 2
+          _pageController.jumpToPage(4); // Assuming DetailScreen is at index 2
         },
       ),
       () => StatisticsScreen(),
@@ -120,7 +122,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // Update the FilmState with the selected film ID
           Provider.of<FilmState>(context, listen: false).setFilmId(filmId);
           // Navigate to DetailScreen
-          _pageController.jumpToPage(3); // Assuming DetailScreen is at index 2
+          _pageController.jumpToPage(4); // Assuming DetailScreen is at index 2
         },
       ),
       () => AboutScreen(),
@@ -181,26 +183,29 @@ class _MyHomePageState extends State<MyHomePage> {
         child: FloatingActionButton(
           onPressed: () {
             setState(() {
-              _selectedIndex = 1;
+              _selectedIndex = 0;
             });
             _pageController.animateToPage(
-              1,
+              0,
               duration: const Duration(milliseconds: 300),
               curve: Curves.easeInOut,
             );
           },
-          shape: const CircleBorder(
-            side: BorderSide(color: AppColors.primary, width: 5.0),
+          shape: CircleBorder(
+            side: BorderSide(
+              color: _selectedIndex == 0
+                  ? AppColors.background
+                  : AppColors.primary,
+              width: 5.0,
+            ),
           ),
           backgroundColor: AppColors.secondary,
-          child: Text(
-            '20/22',
-            style: TextStyle(
-              fontSize: 20,
-              color: AppColors.background,
-              fontWeight: FontWeight.bold,
-            ),
-          ), // Bigger icon
+          child: Image.asset(
+            'assets/image/cats.png',
+            fit: BoxFit.contain,
+            width: 50,
+            height: 50,
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,

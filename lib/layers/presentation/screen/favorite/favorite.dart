@@ -5,6 +5,7 @@ import 'package:ghibli_movies/layers/data/source/network/api.dart';
 
 import 'package:ghibli_movies/layers/domain/entity/film/film.dart';
 import 'package:ghibli_movies/layers/domain/usecase/film_usecase.dart';
+import 'package:ghibli_movies/layers/helper/local_storage.dart';
 
 class FavoriteScreen extends StatefulWidget {
   const FavoriteScreen({super.key, required this.onItemTapped});
@@ -17,6 +18,7 @@ class FavoriteScreen extends StatefulWidget {
 
 class _FavoriteScreenState extends State<FavoriteScreen> {
   late Future<List<Film>> _filmsFuture;
+  final _localStorage = LocalStorage();
 
   @override
   void initState() {
@@ -24,7 +26,19 @@ class _FavoriteScreenState extends State<FavoriteScreen> {
     final api = ApiImpl();
     final repository = FilmImpl(api: api);
     final usecase = FilmUsecase(filmRepository: repository);
-    _filmsFuture = usecase.getAllFilms();
+    // filtered to get only favorite films
+    _filmsFuture = usecase
+        .getAllFilms()
+        .then((films) async {
+          final favoriteStatuses = await Future.wait(
+            films.map((film) => _localStorage.isFavorite(film.id)),
+          );
+          return [
+            for (int i = 0; i < films.length; i++)
+              if (favoriteStatuses[i]) films[i],
+          ];
+        })
+        .then((value) => value);
   }
 
   @override
